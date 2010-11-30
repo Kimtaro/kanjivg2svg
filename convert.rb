@@ -70,44 +70,44 @@ class Importer
           paths << stroke['path']
           stroke_count += 1
           
-          base_path = "<path d=\"#{stroke['path']}\""
           case @type
           when :animated
-            svg << "#{base_path} style=\"#{PATH_STYLE};opacity:0\">\n"
+            svg << "<path d=\"#{stroke['path']}\" style=\"#{PATH_STYLE};opacity:0\">\n"
             svg << "  <animate attributeType=\"CSS\" attributeName=\"opacity\" from=\"0\" to=\"1\" begin=\"#{stroke_count-1}s\" dur=\"1s\" repeatCount=\"0\" fill=\"freeze\" />\n"
             svg << "</path>\n"
           when :numbers
             x, y = move_text_relative_to_path(stroke['path'])
             svg << "<text x=\"#{x}\" y=\"#{y}\" style=\"#{TEXT_STYLE}\">#{stroke_count}</text>\n"
-            svg << "#{base_path} style=\"#{PATH_STYLE}\" />\n"
+            svg << "<path d=\"#{stroke['path']}\" style=\"#{PATH_STYLE}\" />\n"
           when :frames
             md = %r{^[LMT] (#{COORD_RE}) , (#{COORD_RE})}ix.match(paths.last)
             path_start_x = md[1].to_f
             path_start_y = md[2].to_f
             
-            paths.each do |path|
+            paths.each_with_index do |path, i|
+              delta = (stroke_count - 1) == i ? WIDTH * (stroke_count - 1) : WIDTH
               path.gsub!(%r{([LMT]) (#{COORD_RE})}x) do |m|
                 letter = $1
                 x  = $2.to_f
-                x += WIDTH
+                x += delta
                 "#{letter}#{x}"
               end
               path.gsub!(%r{(S) (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE})}x) do |m|
                 letter = $1
                 x1  = $2.to_f
-                x1 += WIDTH
+                x1 += delta
                 x2  = $4.to_f
-                x2 += WIDTH
+                x2 += delta
                 "#{letter},#{x1},#{$3},#{x2}"
               end
               path.gsub!(%r{(C) (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE})}x) do |m|
                 letter  = $1
                 x1  = $2.to_f
-                x1 += WIDTH
+                x1 += delta
                 x2  = $4.to_f
-                x2 += WIDTH
+                x2 += delta
                 x3  = $6.to_f
-                x3 += WIDTH
+                x3 += delta
                 "#{letter}#{x1},#{$3},#{x2},#{$5},#{x3}"
               end
               
