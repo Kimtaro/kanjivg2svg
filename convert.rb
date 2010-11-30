@@ -98,7 +98,7 @@ class Importer
                 x1 += WIDTH
                 x2  = $4.to_f
                 x2 += WIDTH
-                "#{letter}#{x1}#{$3}#{x2}"
+                "#{letter},#{x1},#{$3},#{x2}"
               end
               path.gsub!(%r{(C) (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE})}x) do |m|
                 letter  = $1
@@ -108,7 +108,7 @@ class Importer
                 x2 += WIDTH
                 x3  = $6.to_f
                 x3 += WIDTH
-                "#{letter}#{x1}#{$3}#{x2}#{$5}#{x3}"
+                "#{letter}#{x1},#{$3},#{x2},#{$5},#{x3}"
               end
               
               svg << "<path d=\"#{path}\" style=\"#{PATH_STYLE}\" />\n"
