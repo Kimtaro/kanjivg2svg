@@ -8,8 +8,8 @@ class Importer
   class KanjiVG
     
     WIDTH = 109 # 109 per character
-    HEIGHT = 115 # 109 per character, plus 3 px on each side
-    SVG_HEAD = "<svg width=\"__WIDTH__\" height=\"#{HEIGHT}\" viewBox=\"0 0 __WIDTH__ #{HEIGHT}\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" version=\"1.1\"  baseProfile=\"full\">"
+    HEIGHT = 109 # 109 per character
+    SVG_HEAD = "<svg width=\"__WIDTH__px\" height=\"#{HEIGHT}px\" viewBox=\"0 0 __VIEW_WIDTH__px #{HEIGHT}px\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" version=\"1.1\"  baseProfile=\"full\">"
     SVG_FOOT = '</svg>'
     TEXT_STYLE = 'fill:#FF2A00;font-family:Helvetica;font-weight:normal;font-size:14;stroke-width:0'
     PATH_STYLE = 'fill:none;stroke:black;stroke-width:3'
@@ -63,30 +63,32 @@ class Importer
         paths = []
         
         if @type == :frames
-          width = 4 + (WIDTH * stroke_total)# + (2 * (stroke_total - 1))
+          width = (WIDTH * stroke_total)# + (2 * (stroke_total - 1))
+          view_width = width
         else
           width = WIDTH * 1
         end
         header = SVG_HEAD.gsub('__WIDTH__', width.to_s)
+        header = header.gsub('__VIEW_WIDTH__', view_width.to_s)
         svg << "#{header}\n"
         
         if @type == :frames
           # Outer box
-          top = 5; left = 5; bottom = HEIGHT - 5; right = width - 5
+          top = 1; left = 1; bottom = HEIGHT - 1; right = width - 1
           svg << line(left, top, right, top, LINE_STYLE) # top
           svg << line(left, top, left, bottom, LINE_STYLE) # left
           svg << line(left, bottom, right, bottom, LINE_STYLE) # bottom
           svg << line(right, top, right, bottom, LINE_STYLE) # right
           
           (1 .. stroke_total - 1).each do |i|
-            svg << "<line x1=\"#{WIDTH * i}\" y1=\"5\" x2=\"#{WIDTH * i}\" y2=\"#{HEIGHT - 5}\" style=\"#{LINE_STYLE}\" />"
+            svg << line(WIDTH * i, top, WIDTH * i, bottom, LINE_STYLE)
           end
           
           # Inner guides
-          svg << line(left, (HEIGHT/2)-1, right, (HEIGHT/2)-1, DASHED_LINE_STYLE)
+          svg << line(left, (HEIGHT/2), right, (HEIGHT/2), DASHED_LINE_STYLE)
           
           (1 .. stroke_total).each do |i|
-            svg << "<line x1=\"#{(WIDTH * i) - (WIDTH / 2)}\" y1=\"5\" x2=\"#{(WIDTH * i) - (WIDTH / 2)}\" y2=\"#{HEIGHT - 5}\" style=\"#{DASHED_LINE_STYLE}\" />"
+            svg << line((WIDTH/2)+(WIDTH*(i-1)+1), top, (WIDTH/2)+(WIDTH*(i-1)+1), bottom, DASHED_LINE_STYLE)
           end
         end
         
@@ -165,7 +167,7 @@ class Importer
     end
     
     def line(x1, y1, x2, y2, style)
-      "<line x1=\"#{x1}\" y1=\"#{y1}\" x2=\"#{x2}\" y2=\"#{y2}\" style=\"#{style}\" />"
+      "<line x1=\"#{x1}\" y1=\"#{y1}\" x2=\"#{x2}\" y2=\"#{y2}\" style=\"#{style}\" />\n"
     end
     
   end
