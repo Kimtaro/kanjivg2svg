@@ -7,12 +7,15 @@ require 'pp'
 class Importer
   class KanjiVG
     
-    WIDTH = 120
-    HEIGHT = 120
-    SVG_HEAD = "<svg width=\"__WIDTH__\" height=\"#{HEIGHT}\" viewBox=\"-5 -5 __WIDTH__ #{HEIGHT}\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" version=\"1.1\"  baseProfile=\"full\">"
+    WIDTH = 109 # 109 per character
+    HEIGHT = 115 # 109 per character, plus 3 px on each side
+    SVG_HEAD = "<svg width=\"__WIDTH__\" height=\"#{HEIGHT}\" viewBox=\"0 0 __WIDTH__ #{HEIGHT}\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" version=\"1.1\"  baseProfile=\"full\">"
     SVG_FOOT = '</svg>'
     TEXT_STYLE = 'fill:#FF2A00;font-family:Helvetica;font-weight:normal;font-size:14;stroke-width:0'
     PATH_STYLE = 'fill:none;stroke:black;stroke-width:3'
+    INACTIVE_PATH_STYLE = 'fill:none;stroke:#999;stroke-width:3'
+    LINE_STYLE = 'stroke:#ddd;stroke-width:2'
+    DASHED_LINE_STYLE = 'stroke:#ddd;stroke-width:2;stroke-dasharray:3 3'
     ENTRY_NAME = 'kanji'
     COORD_RE = %r{(?ix:\d+ (?:\.\d+)?)}
     
@@ -37,7 +40,7 @@ class Importer
             parse(noko)
             
             processed += 1
-            if processed % 1000 == 0
+            if processed % 200 == 0
               puts "Processed #{processed} @ #{Time.now}" if @verbose
             end
           else
@@ -55,18 +58,39 @@ class Importer
       doc.css(ENTRY_NAME).each do |entry|
         codepoint = entry['id']
         svg = File.open("#{@output_dir}/U+#{codepoint}_#{@type}.svg", File::RDWR|File::TRUNC|File::CREAT)
+        stroke_count = 0
+        stroke_total = entry.css('stroke[path]').length
+        paths = []
         
         if @type == :frames
-          width = WIDTH * entry.css('stroke').length
+          width = 4 + (WIDTH * stroke_total)# + (2 * (stroke_total - 1))
         else
           width = WIDTH * 1
         end
         header = SVG_HEAD.gsub('__WIDTH__', width.to_s)
         svg << "#{header}\n"
         
-        stroke_count = 0
-        paths = []
-        entry.css('stroke').each do |stroke|
+        if @type == :frames
+          # Outer box
+          top = 5; left = 5; bottom = HEIGHT - 5; right = width - 5
+          svg << line(left, top, right, top, LINE_STYLE) # top
+          svg << line(left, top, left, bottom, LINE_STYLE) # left
+          svg << line(left, bottom, right, bottom, LINE_STYLE) # bottom
+          svg << line(right, top, right, bottom, LINE_STYLE) # right
+          
+          (1 .. stroke_total - 1).each do |i|
+            svg << "<line x1=\"#{WIDTH * i}\" y1=\"5\" x2=\"#{WIDTH * i}\" y2=\"#{HEIGHT - 5}\" style=\"#{LINE_STYLE}\" />"
+          end
+          
+          # Inner guides
+          svg << line(left, (HEIGHT/2)-1, right, (HEIGHT/2)-1, DASHED_LINE_STYLE)
+          
+          (1 .. stroke_total).each do |i|
+            svg << "<line x1=\"#{(WIDTH * i) - (WIDTH / 2)}\" y1=\"5\" x2=\"#{(WIDTH * i) - (WIDTH / 2)}\" y2=\"#{HEIGHT - 5}\" style=\"#{DASHED_LINE_STYLE}\" />"
+          end
+        end
+        
+        entry.css('stroke[path]').each do |stroke|
           paths << stroke['path']
           stroke_count += 1
           
@@ -83,9 +107,12 @@ class Importer
             md = %r{^[LMT] (#{COORD_RE}) , (#{COORD_RE})}ix.match(paths.last)
             path_start_x = md[1].to_f
             path_start_y = md[2].to_f
+            path_start_x += WIDTH * (stroke_count - 1)
             
             paths.each_with_index do |path, i|
-              delta = (stroke_count - 1) == i ? WIDTH * (stroke_count - 1) : WIDTH
+              last = ((stroke_count - 1) == i)
+              delta = last ? WIDTH * (stroke_count - 1) : WIDTH
+              
               path.gsub!(%r{([LMT]) (#{COORD_RE})}x) do |m|
                 letter = $1
                 x  = $2.to_f
@@ -111,8 +138,11 @@ class Importer
                 "#{letter}#{x1},#{$3},#{x2},#{$5},#{x3}"
               end
               
-              svg << "<path d=\"#{path}\" style=\"#{PATH_STYLE}\" />\n"
+              svg << "<path d=\"#{path}\" style=\"#{last ? PATH_STYLE : INACTIVE_PATH_STYLE}\" />\n"
             end
+            
+            # Stroke start
+            svg << "<circle cx=\"#{path_start_x}\" cy=\"#{path_start_y}\" r=\"5\" stroke-width=\"0\" fill=\"#FF2A00\" opacity=\"0.7\" />"
             svg << "\n"
           end
         end
@@ -132,6 +162,10 @@ class Importer
       text_y = path_start_y
       
       [text_x, text_y]
+    end
+    
+    def line(x1, y1, x2, y2, style)
+      "<line x1=\"#{x1}\" y1=\"#{y1}\" x2=\"#{x2}\" y2=\"#{y2}\" style=\"#{style}\" />"
     end
     
   end
