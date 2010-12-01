@@ -1,4 +1,7 @@
 # Encoding: UTF-8
+# By: Kim Ahlström <kim.ahlstrom@gmail.com>
+# License: Creative Commons Attribution-Share Alike 3.0 - http://creativecommons.org/licenses/by-sa/3.0/
+# KanjiVG is copyright (c) 2009/2010 Ulrich Apel and released under the Creative Commons Attribution-Share Alike 3.0
 
 require 'rubygems'
 require 'nokogiri'
@@ -56,12 +59,13 @@ class Importer
     
     def parse(doc)
       doc.css(ENTRY_NAME).each do |entry|
-        codepoint = entry['id']
-        svg = File.open("#{@output_dir}/U+#{codepoint}_#{@type}.svg", File::RDWR|File::TRUNC|File::CREAT)
+        codepoint = entry['midashi'].codepoints.first
+        svg = File.open("#{@output_dir}/#{codepoint}_#{@type}.svg", File::RDWR|File::TRUNC|File::CREAT)
         stroke_count = 0
         stroke_total = entry.css('stroke[path]').length
         paths = []
         
+        # Generate the header
         if @type == :frames
           width = (WIDTH * stroke_total)# + (2 * (stroke_total - 1))
           view_width = width
@@ -72,6 +76,7 @@ class Importer
         header = header.gsub('__VIEW_WIDTH__', view_width.to_s)
         svg << "#{header}\n"
         
+        # Guide lines
         if @type == :frames
           # Outer box
           top = 1; left = 1; bottom = HEIGHT - 1; right = width - 1
@@ -92,6 +97,7 @@ class Importer
           end
         end
         
+        # Draw the strokes
         entry.css('stroke[path]').each do |stroke|
           paths << stroke['path']
           stroke_count += 1
@@ -115,6 +121,7 @@ class Importer
               last = ((stroke_count - 1) == i)
               delta = last ? WIDTH * (stroke_count - 1) : WIDTH
               
+              # Move strokes relative to the frame
               path.gsub!(%r{([LMT]) (#{COORD_RE})}x) do |m|
                 letter = $1
                 x  = $2.to_f
@@ -143,7 +150,7 @@ class Importer
               svg << "<path d=\"#{path}\" style=\"#{last ? PATH_STYLE : INACTIVE_PATH_STYLE}\" />\n"
             end
             
-            # Stroke start
+            # Put a circle at the stroke start
             svg << "<circle cx=\"#{path_start_x}\" cy=\"#{path_start_y}\" r=\"5\" stroke-width=\"0\" fill=\"#FF2A00\" opacity=\"0.7\" />"
             svg << "\n"
           end
