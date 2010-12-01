@@ -181,4 +181,5 @@ class Importer
 end
 
 file = ARGV[0]
-Importer::KanjiVG.new(File.open(file), File.expand_path('../svgs',  __FILE__), :frames, true)
+type = ARGV[1] || 'frames'
+Importer::KanjiVG.new(File.open(file), File.expand_path('../svgs',  __FILE__), type.to_sym, true)
