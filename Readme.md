@@ -11,6 +11,8 @@ Usage
 
 You can change the output type by setting the second argument. If not set it will default to 'frames'. The animated and numbers are less perfected compared to the frames output.
 
+In this repo I've included svg files generated with the 'frames' option.
+
 License
 -------
 
