@@ -1,7 +1,7 @@
 kanjivg2svg
 ===========
 
-This Ruby 1.9 script takes data from the [KanjiVG](http://kanjivg.tagaini.net/) and outputs SVG files with special formatting.
+This Ruby 1.9 script takes stroke order data from the [KanjiVG](http://kanjivg.tagaini.net/) project and outputs SVG files with special formatting.
 
 Usage
 -----
