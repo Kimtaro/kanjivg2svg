@@ -134,7 +134,7 @@ class Importer
                 x1 += delta
                 x2  = $4.to_f
                 x2 += delta
-                "#{letter},#{x1},#{$3},#{x2}"
+                "#{letter}#{x1},#{$3},#{x2}"
               end
               path.gsub!(%r{(C) (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE})}x) do |m|
                 letter  = $1
