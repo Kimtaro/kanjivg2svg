@@ -6,8 +6,7 @@ This Ruby 1.9 script takes stroke order data from the [KanjiVG](http://kanjivg.t
 Usage
 -----
 
-    $ mkdir svgs
-    $ ruby kanjivg2svg.rb path/to/kanjivg.xml [frames|animated|numbers]
+    $ ruby kanjivg2svg.rb path/to/kanji [frames|animated|numbers]
 
 You can change the output type by setting the second argument. If not set it will default to 'frames'. The animated and numbers are less perfected compared to the frames output.
 
