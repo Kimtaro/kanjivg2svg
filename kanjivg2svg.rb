@@ -50,9 +50,9 @@ class Importer
 
     def parse(doc)
       entry = doc.css('g')[1]
-      return if entry['element'].nil?
+      return if entry['kvg:element'].nil?
 
-      codepoint = entry['element'].codepoints.first
+      codepoint = entry['kvg:element'].codepoints.first
       svg = File.open("#{@output_dir}/#{codepoint}_#{@type}.svg", File::RDWR|File::TRUNC|File::CREAT)
       stroke_count = 0
       stroke_total = entry.css('path[d]').length
@@ -105,7 +105,7 @@ class Importer
           svg << "<text x=\"#{x}\" y=\"#{y}\" style=\"#{TEXT_STYLE}\">#{stroke_count}</text>\n"
           svg << "<path d=\"#{stroke['d']}\" style=\"#{PATH_STYLE}\" />\n"
         when :frames
-          md = %r{^[LMT] (#{COORD_RE}) , (#{COORD_RE})}ix.match(paths.last)
+          md = %r{^[LMT] \s* (#{COORD_RE}) , (#{COORD_RE})}ix.match(paths.last)
           path_start_x = md[1].to_f
           path_start_y = md[2].to_f
           path_start_x += WIDTH * (stroke_count - 1)
