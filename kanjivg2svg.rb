@@ -182,7 +182,13 @@ processed = 0
 puts "Starting the conversion @ #{Time.now} ..."
 
 Dir["#{input_dir}*.svg"].each do |file|
-  Importer::KanjiVG.new(File.open(file), output_dir, type.to_sym)
+  begin
+    Importer::KanjiVG.new(File.open(file), output_dir, type.to_sym)
+  rescue => e
+    puts "Failed to process file: #{file}"
+    puts "\t" << e.message
+    e.backtrace.each { |msg| puts "\t" << msg }
+  end
   processed += 1
   if processed % 200 == 0
     puts "Processed #{processed} @ #{Time.now}"
