@@ -49,10 +49,14 @@ class Importer
     private
 
     def parse(doc)
+      codepoint = nil
       entry = doc.css('g')[1]
-      return if entry['kvg:element'].nil?
+      if entry['kvg:element'].nil?
+        codepoint = entry['id'].split(':')[1].to_i(16) # get it from the id="kvg:0abcd"
+      else
+        codepoint = entry['kvg:element'].codepoints.first
+      end
 
-      codepoint = entry['kvg:element'].codepoints.first
       svg = File.open("#{@output_dir}/#{codepoint}_#{@type}.svg", File::RDWR|File::TRUNC|File::CREAT)
       stroke_count = 0
       stroke_total = entry.css('path[d]').length
@@ -182,7 +186,13 @@ processed = 0
 puts "Starting the conversion @ #{Time.now} ..."
 
 Dir["#{input_dir}*.svg"].each do |file|
-  Importer::KanjiVG.new(File.open(file), output_dir, type.to_sym)
+  begin
+    Importer::KanjiVG.new(File.open(file), output_dir, type.to_sym)
+  rescue => e
+    puts "Failed to process file: #{file}"
+    puts "\t" << e.message
+    e.backtrace.each { |msg| puts "\t" << msg }
+  end
   processed += 1
   if processed % 200 == 0
     puts "Processed #{processed} @ #{Time.now}"
