@@ -105,7 +105,7 @@ class Importer
           svg << "<text x=\"#{x}\" y=\"#{y}\" style=\"#{TEXT_STYLE}\">#{stroke_count}</text>\n"
           svg << "<path d=\"#{stroke['d']}\" style=\"#{PATH_STYLE}\" />\n"
         when :frames
-          md = %r{^[LMT] \s* (#{COORD_RE}) , (#{COORD_RE})}ix.match(paths.last)
+          md = %r{^[LMTm] \s* (#{COORD_RE}) [,\s] (#{COORD_RE})}ix.match(paths.last)
           path_start_x = md[1].to_f
           path_start_y = md[2].to_f
           path_start_x += WIDTH * (stroke_count - 1)
@@ -115,13 +115,13 @@ class Importer
             delta = last ? WIDTH * (stroke_count - 1) : WIDTH
 
             # Move strokes relative to the frame
-            path.gsub!(%r{([LMTm]) (#{COORD_RE})}x) do |m|
+            path.gsub!(%r{([LMTm]) \s* (#{COORD_RE})}x) do |m|
               letter = $1
               x  = $2.to_f
               x += delta
               "#{letter}#{x}"
             end
-            path.gsub!(%r{(S) (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE})}x) do |m|
+            path.gsub!(%r{(S) \s* (#{COORD_RE}) [,\s] (#{COORD_RE}) [,\s] (#{COORD_RE})}x) do |m|
               letter = $1
               x1  = $2.to_f
               x1 += delta
@@ -129,7 +129,7 @@ class Importer
               x2 += delta
               "#{letter}#{x1},#{$3},#{x2}"
             end
-            path.gsub!(%r{(C) (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE}) , (#{COORD_RE})}x) do |m|
+            path.gsub!(%r{(C) \s* (#{COORD_RE}) [,\s] (#{COORD_RE}) [,\s] (#{COORD_RE}) [,\s] (#{COORD_RE}) [,\s] (#{COORD_RE})}x) do |m|
               letter  = $1
               x1  = $2.to_f
               x1 += delta
