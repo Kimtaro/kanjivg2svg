@@ -119,7 +119,7 @@ class Importer
             delta = last ? WIDTH * (stroke_count - 1) : WIDTH
 
             # Move strokes relative to the frame
-            path.gsub!(%r{([LMTm]) \s* (#{COORD_RE})}x) do |m|
+            path.gsub!(%r{([LMT]) \s* (#{COORD_RE})}x) do |m|
               letter = $1
               x  = $2.to_f
               x += delta
